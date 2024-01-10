@@ -14,12 +14,12 @@ namespace EntityFrameworkCore.Toolbox.Bulk
 
         }
 
-        public static async Task<EfBulkCopy<TEntity>> CreateAsync(DbContext dbContext)
+        public static async Task<EfBulkCopy<TEntity>> CreateAsync(DbContext dbContext, CancellationToken cancellationToken = default)
         {
             var entityParamNameToSourceMap = dbContext.Set<TEntity>().EntityType.GetProperties()
                 .ToDictionary(p => p.Name, p => (Func<TEntity, object?>)((TEntity e) => e == null ? default : p?.PropertyInfo?.GetValue(e) ?? default), StringComparer.Ordinal);
 
-            var mapTask = GetColumnMap(dbContext, entityParamNameToSourceMap);
+            var mapTask = GetColumnMap(dbContext, entityParamNameToSourceMap, cancellationToken);
 
             return new EfBulkCopy<TEntity>(dbContext, await mapTask);
         }
@@ -44,22 +44,23 @@ namespace EntityFrameworkCore.Toolbox.Bulk
             _map = map;
         }
 
-        public static async Task<EfBulkCopy<TEntity, TSource>> CreateAsync(DbContext dbContext, Dictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
-            => new EfBulkCopy<TEntity, TSource>(dbContext, await GetColumnMap(dbContext, entityParamNameToSourceMap));
+        public static async Task<EfBulkCopy<TEntity, TSource>> CreateAsync(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap, CancellationToken cancellationToken = default)
+            => new EfBulkCopy<TEntity, TSource>(dbContext, await GetColumnMap(dbContext, entityParamNameToSourceMap, cancellationToken));
 
-        public Task WriteToServer(IEnumerable<TSource> data) => _bulkCopy.WriteToServerAsync(new EntityDataReader<TSource>(_map, data));
+        public Task WriteToServerAsync(IEnumerable<TSource> data, CancellationToken cancellationToken = default)
+            => _bulkCopy.WriteToServerAsync(new EntityDataReader<TSource>(_map, data), cancellationToken);
 
 
-        protected static async Task<Dictionary<int, Func<TSource, object?>>> GetColumnMap(DbContext dbContext, Dictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
+        protected static async Task<Dictionary<int, Func<TSource, object?>>> GetColumnMap(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap, CancellationToken cancellationToken = default)
         {
             if (TryGetTypeMap(dbContext, out var cachedDict))
             {
                 return cachedDict as Dictionary<int, Func<TSource, object?>> ?? throw new Exception("Bad cached dictionary mapping was unable to parse");
             }
 
-            return await Task.Run(() => BuildColumnMap(dbContext, entityParamNameToSourceMap));
+            return await Task.Run(() => BuildColumnMap(dbContext, entityParamNameToSourceMap), cancellationToken);
 
-            static Dictionary<int, Func<TSource, object?>> BuildColumnMap(DbContext dbContext, Dictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
+            static Dictionary<int, Func<TSource, object?>> BuildColumnMap(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
             {
                 var datatable = new DataTable();
                 using (var da = new SqlDataAdapter("SELECT TOP 0 * FROM " + dbContext.GetTableName<TEntity>(), dbContext.Database.GetConnectionString()))
