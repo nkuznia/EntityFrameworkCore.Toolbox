@@ -19,7 +19,7 @@ namespace EntityFrameworkCore.Toolbox.Bulk
             var entityParamNameToSourceMap = dbContext.Set<TEntity>().EntityType.GetProperties()
                 .ToDictionary(p => p.Name, p => (Func<TEntity, object?>)((TEntity e) => e == null ? default : p?.PropertyInfo?.GetValue(e) ?? default), StringComparer.Ordinal);
 
-            var mapTask = GetColumnMap(dbContext, entityParamNameToSourceMap, cancellationToken);
+            var mapTask = GetColumnMapAsync(dbContext, entityParamNameToSourceMap, cancellationToken);
 
             return new EfBulkCopy<TEntity>(dbContext, await mapTask);
         }
@@ -29,10 +29,10 @@ namespace EntityFrameworkCore.Toolbox.Bulk
         where TEntity : class
         where TSource : class
     {
-        private SqlBulkCopy _bulkCopy;
-        private Dictionary<int, Func<TSource, object?>> _map;
-        private bool _isDisposed;
-        private static readonly ConcurrentDictionary<Tuple<Type, Type, Type>, IDictionary> _typeMap = new ConcurrentDictionary<Tuple<Type, Type, Type>, IDictionary>();
+        protected SqlBulkCopy _bulkCopy;
+        protected Dictionary<int, Func<TSource, object?>> _map;
+        protected bool _isDisposed;
+        protected static readonly ConcurrentDictionary<Tuple<Type, Type, Type>, IDictionary> _typeMap = new ConcurrentDictionary<Tuple<Type, Type, Type>, IDictionary>();
 
         protected EfBulkCopy(DbContext dbContext, Dictionary<int, Func<TSource, object?>> map)
         {
@@ -45,13 +45,13 @@ namespace EntityFrameworkCore.Toolbox.Bulk
         }
 
         public static async Task<EfBulkCopy<TEntity, TSource>> CreateAsync(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap, CancellationToken cancellationToken = default)
-            => new EfBulkCopy<TEntity, TSource>(dbContext, await GetColumnMap(dbContext, entityParamNameToSourceMap, cancellationToken));
+            => new EfBulkCopy<TEntity, TSource>(dbContext, await GetColumnMapAsync(dbContext, entityParamNameToSourceMap, cancellationToken));
 
         public Task WriteToServerAsync(IEnumerable<TSource> data, CancellationToken cancellationToken = default)
             => _bulkCopy.WriteToServerAsync(new EntityDataReader<TSource>(_map, data), cancellationToken);
 
 
-        protected static async Task<Dictionary<int, Func<TSource, object?>>> GetColumnMap(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap, CancellationToken cancellationToken = default)
+        protected static async Task<Dictionary<int, Func<TSource, object?>>> GetColumnMapAsync(DbContext dbContext, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap, CancellationToken cancellationToken = default)
         {
             if (TryGetTypeMap(dbContext, out var cachedDict))
             {
@@ -85,7 +85,7 @@ namespace EntityFrameworkCore.Toolbox.Bulk
             }
         }
 
-        private static bool TryGetTypeMap(DbContext context, out IDictionary<int, Func<TSource, object?>> maps)
+        protected static bool TryGetTypeMap(DbContext context, out IDictionary<int, Func<TSource, object?>> maps)
         {
             if (_typeMap.TryGetValue(Tuple.Create(context.GetType(), typeof(TEntity), typeof(TSource)), out var cachedMap) && cachedMap is IDictionary<int, Func<TSource, object?>> mapResult)
             {
@@ -97,7 +97,7 @@ namespace EntityFrameworkCore.Toolbox.Bulk
             return false;
         }
 
-        private static bool TrySetTypeMap(DbContext context, IDictionary maps)
+        protected static bool TrySetTypeMap(DbContext context, IDictionary maps)
             => _typeMap.TryAdd(Tuple.Create(context.GetType(), typeof(TEntity), typeof(TSource)), maps);
 
         protected virtual void Dispose(bool disposing)

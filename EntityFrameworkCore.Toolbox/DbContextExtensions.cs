@@ -22,7 +22,7 @@ namespace EntityFrameworkCore.Toolbox
         /// <param name="dbContext">The DbContext.</param>
         /// <returns>The bool if successful.</returns>
         /// <exception cref="InvalidOperationException">A type was passed that is not an entity in the DbContext.</exception>
-        public static async Task<bool> TruncateTable<TEntity>(this DbContext dbContext, CancellationToken cancellationToken = default)
+        public static async Task<bool> TruncateTableAsync<TEntity>(this DbContext dbContext, CancellationToken cancellationToken = default)
             where TEntity : class
         {
             var tableName = GetTableName<TEntity>(dbContext);
