@@ -13,7 +13,7 @@ namespace EntityFrameworkCore.Toolbox
         /// Use in OnModelCreating.
         /// </summary>
         /// <param name="modelBuilder">The context modelbuilder.</param>
-        public static void FixVarCharMaxLength(ModelBuilder modelBuilder)
+        public static void FixVarCharMaxLength(this ModelBuilder modelBuilder)
         {
             foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetProperties()))
             {
@@ -39,7 +39,7 @@ namespace EntityFrameworkCore.Toolbox
         /// Use in OnModelCreating.
         /// </summary>
         /// <param name="modelBuilder">The context modelbuilder.</param>
-        public static void AddEnumReferenceTable<TEnum>(ModelBuilder modelBuilder, string tablePrefix = "EnumRef", bool useFullName = false)
+        public static void AddEnumReferenceTable<TEnum>(this ModelBuilder modelBuilder, string tablePrefix = "EnumRef", bool useFullName = false)
             where TEnum : struct, Enum
         {
             var name = useFullName ? typeof(TEnum).FullName?.Replace(".", string.Empty) ?? typeof(TEnum).Name : typeof(TEnum).Name;
@@ -52,7 +52,7 @@ namespace EntityFrameworkCore.Toolbox
         /// Use in OnModelCreating.
         /// </summary>
         /// <param name="modelBuilder">The context modelbuilder.</param>
-        public static void AddEnumReferenceTable(ModelBuilder modelBuilder, Type type, string tablePrefix = "EnumRef", bool useFullName = false)
+        public static void AddEnumReferenceTable(this ModelBuilder modelBuilder, Type type, string tablePrefix = "EnumRef", bool useFullName = false)
         {
             if (!type.IsEnum) throw new Exception($"Cannot add non-enum type {type.Name} as an enum reference to the database.");
             var name = useFullName ? type.FullName?.Replace(".", string.Empty) ?? type.Name : type.Name;
@@ -65,7 +65,7 @@ namespace EntityFrameworkCore.Toolbox
         /// Use in OnModelCreating.
         /// </summary>
         /// <param name="modelBuilder">The context modelbuilder.</param>
-        public static void AddAllEnumReferenceTables(ModelBuilder modelBuilder, string tablePrefix = "EnumRef", bool useFullName = false)
+        public static void AddAllEnumReferenceTables(this ModelBuilder modelBuilder, string tablePrefix = "EnumRef", bool useFullName = false)
         {
             var enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsEnum);
             

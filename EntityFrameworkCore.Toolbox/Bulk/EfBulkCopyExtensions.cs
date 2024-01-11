@@ -9,7 +9,7 @@ namespace EntityFrameworkCore.Toolbox.Bulk
         /// <typeparam name="TEntity">The entity table to write to.</typeparam>
         /// <param name="dbContext">The database context.</param>
         /// <param name="values">The values to bulkcopy to the server</param>
-        public static async Task BulkCopy<TEntity>(this DbContext dbContext, IEnumerable<TEntity> values)
+        public static async Task BulkCopyAsync<TEntity>(this DbContext dbContext, IEnumerable<TEntity> values)
             where TEntity : class
         {
             using var bulkCopy = await EfBulkCopy<TEntity>.CreateAsync(dbContext);
@@ -23,7 +23,7 @@ namespace EntityFrameworkCore.Toolbox.Bulk
         /// <typeparam name="TSource">The IEnumerable source data type.</typeparam>
         /// <param name="dbContext">The database context.</param>
         /// <param name="values">The values to bulkcopy to the server</param>
-        public static async Task BulkCopy<TEntity, TSource>(this DbContext dbContext, IEnumerable<TSource> values, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
+        public static async Task BulkCopyAsync<TEntity, TSource>(this DbContext dbContext, IEnumerable<TSource> values, IDictionary<string, Func<TSource, object?>> entityParamNameToSourceMap)
             where TEntity : class
             where TSource : class
         {

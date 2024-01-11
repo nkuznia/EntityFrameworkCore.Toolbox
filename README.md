@@ -9,11 +9,29 @@ Tested and working with Entity Framework Core Sql Server. Other backends may req
 Easily upload entities to a database, bypassing the database context entirely by automatting the mapping to SqlBulkCopy:
 
 ```cs
-await dbContext.BulkCopy((IEnumerable<TEntity>>) myData);
+await dbContext.BulkCopyAsync(myData);
 ```
 
 Or even pull from another source entirely via passing a map of TEntity.Property.Name and a fetch function:
 
 ```cs
-await dbContext.BulkCopy<TEntity, TSource>>((IEnumerable<TSource>>) myData, IDictionary<string, Func<string, object?> entityNameToPropertyGetterMap);
+await dbContext.BulkCopyAsync<TEntity, TSource>>(myData, entityNameToPropertyGetterMap);
+```
+
+## Enum reference helpers
+
+Add reference tables to the database automatically or as needed.
+
+```cs
+public class MyDbContext : DbContext
+{
+...
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.AddEnumReferenceTable<MyEnum>(); // Add enums one at a time
+
+		modelBuilder.AddEnumReferenceTables(); // Add all enums in the assembly
+	}
+...
+}
 ```
