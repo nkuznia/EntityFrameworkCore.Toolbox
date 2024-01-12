@@ -61,17 +61,21 @@ namespace EntityFrameworkCore.Toolbox
         }
 
         /// <summary>
-        /// Creates reference tables in the database for all enums in the executing assembly.
+        /// Creates reference tables in the database for all enums in the DbContext.
         /// Use in OnModelCreating.
         /// </summary>
         /// <param name="modelBuilder">The context modelbuilder.</param>
         public static void AddAllEnumReferenceTables(this ModelBuilder modelBuilder, string tablePrefix = "EnumRef", bool useFullName = false)
         {
-            var enums = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsEnum);
+            var enums = modelBuilder.Model.GetEntityTypes()
+                .SelectMany(e => e.GetProperties())
+                .Select(p => p.PropertyInfo?.PropertyType)
+                .Where(p => p?.IsEnum ?? false)
+                .Distinct();
             
             foreach(var enumType in enums)
             {
-                AddEnumReferenceTable(modelBuilder, enumType, tablePrefix, useFullName);
+                AddEnumReferenceTable(modelBuilder, enumType!, tablePrefix, useFullName);
             }
         }
     }

@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Nick Kuznia</Authors>
     <PackageTags>EntityFramework;Entity;Framework;bulk;SQL</PackageTags>
-    <Version>1.0.1</Version>
+    <Version>1.0.3</Version>
     <RepositoryUrl>https://github.com/nkuznia/EntityFrameworkCore.Toolbox</RepositoryUrl>
     <Description>Extensions and ease of life code to automattically handle working with Entity Framework and related datasets.
 
