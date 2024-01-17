@@ -71,7 +71,7 @@ namespace EntityFrameworkCore.Toolbox
                 .SelectMany(e => e.GetProperties())
                 .Select(p => p.PropertyInfo?.PropertyType)
                 .Where(p => p?.IsEnum ?? false)
-                .Distinct();
+                .Distinct().ToList();
             
             foreach(var enumType in enums)
             {

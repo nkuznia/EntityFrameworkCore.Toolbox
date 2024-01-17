@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EntityFrameworkCore.Toolbox
 {
@@ -22,7 +23,7 @@ namespace EntityFrameworkCore.Toolbox
         /// <param name="dbContext">The DbContext.</param>
         /// <returns>The bool if successful.</returns>
         /// <exception cref="InvalidOperationException">A type was passed that is not an entity in the DbContext.</exception>
-        public static async Task<bool> TruncateTableAsync<TEntity>(this DbContext dbContext, CancellationToken cancellationToken = default)
+        public static async Task<bool> TruncateTableAsync<TEntity>(this DbContext dbContext, CancellationToken cancellationToken = default, bool reseed = true)
             where TEntity : class
         {
             var tableName = GetTableName<TEntity>(dbContext);
@@ -42,14 +43,23 @@ namespace EntityFrameworkCore.Toolbox
 
             if (cancellationToken.IsCancellationRequested) return false;
 
+            var isDeleted = false;
             try
             {
-                await dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM {tableName}; DBCC CHECKIDENT ('{tableName}', RESEED, 0);", cancellationToken);
+                await dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM {tableName};", cancellationToken);
+                isDeleted = true;
+
+                if(reseed)
+                {
+                    await dbContext.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT('{tableName}', RESEED, 0);", cancellationToken);
+                }
+
                 return !cancellationToken.IsCancellationRequested;
             }
             catch { }
 
-            return false;
+            // return true even if reseed failed. Happens on non-identity tables.
+            return isDeleted && !cancellationToken.IsCancellationRequested;
         }
 
 
