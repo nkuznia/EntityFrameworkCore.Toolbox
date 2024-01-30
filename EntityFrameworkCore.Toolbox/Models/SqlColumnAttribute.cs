@@ -20,7 +20,7 @@ namespace EntityFrameworkCore.Toolbox.Models
 
         public SqlColumnAttribute(string name, SqlDbType dbType, int length = 0) : base(name)
         {
-            SetType(dbType,length);
+            SetType(dbType, length);
         }
 
         private void SetType(SqlDbType dbType, int length)
