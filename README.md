@@ -30,7 +30,7 @@ public class MyDbContext : DbContext
 	{
 		modelBuilder.AddEnumReferenceTable<MyEnum>(); // Add enums one at a time
 
-		modelBuilder.AddEnumReferenceTables(); // Add all enums in the assembly
+		modelBuilder.AddEnumReferenceTables(); // Add all enums in the context
 	}
 ...
 }

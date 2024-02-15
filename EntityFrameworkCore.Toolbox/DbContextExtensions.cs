@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace EntityFrameworkCore.Toolbox
 {
@@ -23,43 +24,23 @@ namespace EntityFrameworkCore.Toolbox
         /// <param name="dbContext">The DbContext.</param>
         /// <returns>The bool if successful.</returns>
         /// <exception cref="InvalidOperationException">A type was passed that is not an entity in the DbContext.</exception>
-        public static async Task<bool> TruncateTableAsync<TEntity>(this DbContext dbContext, CancellationToken cancellationToken = default, bool reseed = true)
+        public static async Task<bool> TruncateTableAsync<TEntity>(this DbContext dbContext, ILogger? logger = default, CancellationToken cancellationToken = default, bool reseed = true)
             where TEntity : class
         {
-            var tableName = GetTableName<TEntity>(dbContext);
             if(cancellationToken.IsCancellationRequested) return false;
+
+            var tableName = GetTableName<TEntity>(dbContext);
+            var sql = $"BEGIN TRY TRUNCATE TABLE {tableName}; END TRY BEGIN CATCH DELETE FROM {tableName}; {(reseed ? $"DBCC CHECKIDENT('{tableName}', RESEED, 0); " : "")}END CATCH";
 
             try
             {
-                return (await dbContext.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {tableName};", cancellationToken)) == -1 && !cancellationToken.IsCancellationRequested;
+                return (await dbContext.Database.ExecuteSqlRawAsync(sql, cancellationToken)) == -1 && !cancellationToken.IsCancellationRequested;
             }
             catch (Exception ex)
             {
-                if (!ex.Message.EndsWith(" because it is being referenced by a FOREIGN KEY constraint."))
-                {
-                    throw;
-                }
+                logger?.LogError(ex, $"Error executing truncate: {sql}");
+                return false;
             }
-
-            if (cancellationToken.IsCancellationRequested) return false;
-
-            var isDeleted = false;
-            try
-            {
-                await dbContext.Database.ExecuteSqlRawAsync($"DELETE FROM {tableName};", cancellationToken);
-                isDeleted = true;
-
-                if(reseed)
-                {
-                    await dbContext.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT('{tableName}', RESEED, 0);", cancellationToken);
-                }
-
-                return !cancellationToken.IsCancellationRequested;
-            }
-            catch { }
-
-            // return true even if reseed failed. Happens on non-identity tables.
-            return isDeleted && !cancellationToken.IsCancellationRequested;
         }
 
 
