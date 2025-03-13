@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Nick Kuznia</Authors>
     <PackageTags>EntityFramework;Entity;Framework;bulk;SQL</PackageTags>
-    <Version>8.0.12</Version>
+    <Version>8.0.14</Version>
     <RepositoryUrl>https://github.com/nkuznia/EntityFrameworkCore.Toolbox</RepositoryUrl>
     <Description>Extensions and ease of life code to automattically handle working with Entity Framework and related datasets.
 
@@ -24,7 +24,7 @@ Tested and working with Entity Framework Core Sql Server. Other backends may req
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
   </ItemGroup>
 
 </Project>
